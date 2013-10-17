@@ -28,7 +28,7 @@ Usage
 
     Here is an example that gives a value to every recognized field:
 
-        $ cat amazon.com
+        $ cat amazon
         url: amazon.com
         username: example@example.com
         length: 48

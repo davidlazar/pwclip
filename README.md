@@ -2,7 +2,7 @@ pwclip is a hash-based, command-line password manager.  pwclip does not store
 passwords.  Instead, it computes an account's password by hashing a secret key
 together with account-specific information stored in a YAML file.
 
-I've tested the pwclip on Python 2.7.5 and Python 3.3.2.
+I've tested pwclip on Python 2.7.5 and Python 3.3.2.
 
 Usage
 -----

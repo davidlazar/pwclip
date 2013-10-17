@@ -7,6 +7,7 @@ import os
 import subprocess
 import sys
 import time
+
 import yaml
 
 version = '0.1.0'
@@ -96,14 +97,21 @@ def main():
 ### utility functions
 
 def get_clipboard():
-    return subprocess.check_output(['xclip', '-out'], universal_newlines=True)
+    if sys.platform == 'darwin':
+        return subprocess.check_output(['pbpaste'], universal_newlines=True)
+    else:
+        return subprocess.check_output(['xclip', '-out'], universal_newlines=True)
 
 
 def set_clipboard(s):
-    p = subprocess.Popen(['xclip'], stdin=subprocess.PIPE, universal_newlines=True)
+    if sys.platform == 'darwin':
+        clip = 'pbcopy'
+    else:
+        clip = 'xclip'
+    p = subprocess.Popen([clip], stdin=subprocess.PIPE, universal_newlines=True)
     p.communicate(s)
     if p.returncode != 0:
-        raise subprocess.CalledProcessError(p.returncode, 'xclip')
+        raise subprocess.CalledProcessError(p.returncode, clip)
 
 
 def baseX(bs, alphabet):

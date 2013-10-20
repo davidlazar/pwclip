@@ -58,9 +58,9 @@ def genpass_file(keyfile, pwmfile, secret=None):
 
 def pwclip(pw):
     cb = get_clipboard() 
-    set_clipboard(pw)
-    print('Password copied to clipboard for 10 seconds.')
     try:
+        set_clipboard(pw)
+        print('Password copied to clipboard for 10 seconds.')
         time.sleep(10)
     except KeyboardInterrupt:
         pass

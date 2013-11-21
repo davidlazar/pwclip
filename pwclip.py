@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # pwclip - a hash-based password manager <https://github.com/davidlazar/pwclip>
+from __future__ import print_function
 import argparse
 import hashlib
 import hmac
@@ -43,17 +44,14 @@ def genpass(key, pwm, secret=None):
     return p
 
 
-def genpass_file(keyfile, pwmfile, secret=None):
+def readpwm(pwmfile):
     with open(pwmfile, 'r') as f:
         yam = yaml.load(f)
     
-    with open(keyfile, 'rb') as f:
-        key = f.read()
-
     pwm = pwm_defaults.copy()
     pwm.update(yam)
 
-    return genpass(key, pwm, secret)
+    return pwm
 
 
 def pwclip(pw):
@@ -89,9 +87,15 @@ def main():
         sys.exit(1)
 
     keyfile = os.environ[envkey]
-    pwmfile = args.FILE
+    with open(keyfile, 'rb') as f:
+        key = f.read()
 
-    pw = genpass_file(keyfile, pwmfile, secret=args.s)
+    pwmfile = args.FILE
+    pwm = readpwm(pwmfile)
+
+    print(pwm['username'], file=sys.stderr)
+
+    pw = genpass(key, pwm, secret=args.s)
     if args.p:
         print(pw)
     else:

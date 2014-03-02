@@ -11,6 +11,7 @@ import time
 
 import yaml
 
+# Bump at least Y in version X.Y.Z whenever the password generation algorithm changes.
 version = '0.1.0'
 envkey = 'PWCLIP_KEYFILE'
 pwm_defaults = {

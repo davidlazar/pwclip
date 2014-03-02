@@ -12,7 +12,7 @@ import time
 import yaml
 
 # Bump at least Y in version X.Y.Z whenever the password generation algorithm changes.
-version = '0.1.0'
+version = '0.2.0'
 envkey = 'PWCLIP_KEYFILE'
 pwm_defaults = {
     'length': 32,
@@ -22,27 +22,19 @@ pwm_defaults = {
 
 
 def genpass(key, pwm, secret=None):
-    h = hmac.new(key, digestmod=hashlib.sha512)
-    h.update(pwm['url'].encode('UTF-8'))
-    h.update(pwm['username'].encode('UTF-8'))
+    rng = DRBG(key)
+    rng.reseed(pwm['url'].encode('UTF-8'))
+    rng.reseed(pwm['username'].encode('UTF-8'))
     if secret:
-        h.update(pwm['s' + str(secret)].encode('UTF-8'))
+        rng.reseed(pwm['s' + str(secret)].encode('UTF-8'))
 
-    # Run the hash function many times to get a digest of desired length.
-    # A sponge would be more elegant.
-    i = 0
-    d = b''
     n = pwm['length']
-    while len(d) < n:
-        d += h.digest()
-        h.update(h.digest() + bytes([i % 256]))
-        i += 1
+    r = rng.generate(n)
 
-    p = baseX(d, pwm['charset'])
+    p = baseX(r, pwm['charset'])
     p = pwm['prefix'] + p
-    p = p[:n]
 
-    return p
+    return p[:n]
 
 
 def readpwm(pwmfile):
@@ -150,6 +142,35 @@ def from_bytes(bs):
             r <<= 8
             r |= ord(b)
         return r
+
+
+# HMAC_DRBG from https://github.com/davidlazar/python-drbg
+class DRBG(object):
+    def __init__(self, seed):
+        self.key = b'\x00' * 64
+        self.val = b'\x01' * 64
+        self.reseed(seed)
+
+    def hmac(self, key, val):
+        return hmac.new(key, val, hashlib.sha512).digest()
+
+    def reseed(self, data=b''):
+        self.key = self.hmac(self.key, self.val + b'\x00' + data)
+        self.val = self.hmac(self.key, self.val)
+
+        if data:
+            self.key = self.hmac(self.key, self.val + b'\x01' + data)
+            self.val = self.hmac(self.key, self.val)
+
+    def generate(self, n):
+        xs = b''
+        while len(xs) < n:
+            self.val = self.hmac(self.key, self.val)
+            xs += self.val
+
+        self.reseed()
+
+        return xs[:n]
 
 
 if __name__ == "__main__":

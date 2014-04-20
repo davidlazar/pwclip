@@ -1,0 +1,7 @@
+url: amazon.com
+username: example@example.com
+length: 48
+prefix: foobar
+charset: ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789`~!@#$%^&*()_-+={}|[]\:";'<>?,./
+q1: favorite band
+q2: city born

@@ -12,7 +12,7 @@ import time
 import yaml
 
 # Bump at least Y in version X.Y.Z whenever the password generation algorithm changes.
-version = '0.2.0'
+version = '0.3.0'
 pwm_defaults = {
     'length': 32,
     'prefix': '',

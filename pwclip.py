@@ -62,9 +62,11 @@ def argparser():
     desc = 'pwclip {}\nhttps://github.com/davidlazar/pwclip'.format(version)
     parser = argparse.ArgumentParser(description=desc,
         formatter_class=argparse.RawDescriptionHelpFormatter)
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument('-k', metavar='KEYFILE', help='read key from file')
+    group.add_argument('-c', metavar='COMMAND',
+        help='read key from stdout of command')
     parser.add_argument('YAMLFILE', help='password settings in YAML format')
-    parser.add_argument('-k', required=True, metavar='KEYFILE',
-        help='path to key file')
     parser.add_argument('-p', action='store_true',
         help='print password instead of copying it to the clipboard')
     parser.add_argument('-s', type=int, metavar='N',
@@ -72,13 +74,18 @@ def argparser():
     return parser
 
 
+def readkey(args):
+    if args.c:
+        return subprocess.check_output(args.c, shell=True)
+    else:
+        return open(args.k, 'rb').read()
+
+
 def main():
     parser = argparser()
     args = parser.parse_args()
 
-    with open(args.k, 'rb') as f:
-        key = f.read()
-
+    key = readkey(args)
     pwm = readpwm(args.YAMLFILE)
 
     print(pwm['username'], file=sys.stderr)

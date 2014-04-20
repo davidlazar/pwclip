@@ -38,7 +38,7 @@ def genpass(key, pwm, question=None):
 
 def readpwm(pwmfile):
     with open(pwmfile, 'r') as f:
-        yam = yaml.load(f)
+        yam = yaml.safe_load(f)
     
     pwm = pwm_defaults.copy()
     pwm.update(yam)

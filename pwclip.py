@@ -13,7 +13,6 @@ import yaml
 
 # Bump at least Y in version X.Y.Z whenever the password generation algorithm changes.
 version = '0.2.0'
-envkey = 'PWCLIP_KEYFILE'
 pwm_defaults = {
     'length': 32,
     'prefix': '',
@@ -63,7 +62,9 @@ def argparser():
     desc = 'pwclip {}\nhttps://github.com/davidlazar/pwclip'.format(version)
     parser = argparse.ArgumentParser(description=desc,
         formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument('FILE', help='password settings in YAML format')
+    parser.add_argument('YAMLFILE', help='password settings in YAML format')
+    parser.add_argument('-k', required=True, metavar='KEYFILE',
+        help='path to key file')
     parser.add_argument('-p', action='store_true',
         help='print password instead of copying it to the clipboard')
     parser.add_argument('-s', type=int, metavar='N',
@@ -75,16 +76,10 @@ def main():
     parser = argparser()
     args = parser.parse_args()
 
-    if not envkey in os.environ:
-        sys.stderr.write('error: no value for environment variable {}\n'.format(envkey))
-        sys.exit(1)
-
-    keyfile = os.environ[envkey]
-    with open(keyfile, 'rb') as f:
+    with open(args.k, 'rb') as f:
         key = f.read()
 
-    pwmfile = args.FILE
-    pwm = readpwm(pwmfile)
+    pwm = readpwm(args.YAMLFILE)
 
     print(pwm['username'], file=sys.stderr)
 

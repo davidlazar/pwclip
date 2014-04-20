@@ -20,12 +20,12 @@ pwm_defaults = {
 }
 
 
-def genpass(key, pwm, secret=None):
+def genpass(key, pwm, question=None):
     rng = DRBG(key)
     rng.reseed(pwm['url'].encode('UTF-8'))
     rng.reseed(pwm['username'].encode('UTF-8'))
-    if secret:
-        rng.reseed(pwm['s' + str(secret)].encode('UTF-8'))
+    if question:
+        rng.reseed(question.encode('UTF-8'))
 
     n = pwm['length']
     r = rng.generate(n)
@@ -69,7 +69,7 @@ def argparser():
     parser.add_argument('YAMLFILE', help='password settings in YAML format')
     parser.add_argument('-p', action='store_true',
         help='print password instead of copying it to the clipboard')
-    parser.add_argument('-s', type=int, metavar='N',
+    parser.add_argument('-q', type=int, metavar='N',
         help='print answer to secret question N')
     return parser
 
@@ -88,9 +88,14 @@ def main():
     key = readkey(args)
     pwm = readpwm(args.YAMLFILE)
 
-    print(pwm['username'], file=sys.stderr)
+    if args.q:
+        question = pwm['q' + str(args.q)]
+        print('question: ' + question, file=sys.stderr)
+    else:
+        question = None
+        print('username: ' + pwm['username'], file=sys.stderr)
 
-    pw = genpass(key, pwm, secret=args.s)
+    pw = genpass(key, pwm, question)
     if args.p:
         print(pw)
     else:

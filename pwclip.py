@@ -4,7 +4,6 @@ from __future__ import print_function
 import argparse
 import hashlib
 import hmac
-import os
 import subprocess
 import sys
 import time

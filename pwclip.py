@@ -39,7 +39,7 @@ def genpass(key, pwm, question=None):
 def readpwm(pwmfile):
     with open(pwmfile, 'r') as f:
         yam = yaml.safe_load(f)
-    
+
     pwm = pwm_defaults.copy()
     pwm.update(yam)
 
@@ -47,7 +47,7 @@ def readpwm(pwmfile):
 
 
 def pwclip(pw):
-    cb = get_clipboard() 
+    cb = get_clipboard()
     try:
         set_clipboard(pw)
         print('Password copied to clipboard for 10 seconds.')

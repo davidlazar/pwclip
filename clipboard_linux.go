@@ -1,4 +1,5 @@
 // +build linux
+
 package main
 
 var clipboardGetCmd = []string{"xclip", "-out"}

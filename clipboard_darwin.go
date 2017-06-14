@@ -1,4 +1,5 @@
 // +build darwin
+
 package main
 
 var clipboardGetCmd = []string{"pbpaste"}

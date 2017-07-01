@@ -6,13 +6,12 @@ passwords.  Instead, it computes an account's password by hashing a secret key
 together with account-specific information stored in a YAML file.
 
 The previous Python implementation (in the `python/` directory) is not
-compatible with the Go implementation.  The pwclip algorithm is defined in the
-[go-crypto repository](https://github.com/davidlazar/go-crypto).
+compatible with the Go implementation.
 
 Usage
 -----
 
-0.  `go get github.com/davidlazar/pwclip`
+0.  `go get github.com/davidlazar/pwclip/...`
 
 1.  Pick and remember a passphrase. Alternatively, you can use a key file
     with the `-k` flag.

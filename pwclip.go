@@ -1,96 +1,49 @@
-package main
+package pwclip
 
 import (
-	"fmt"
-	"os"
-	"strconv"
-	"syscall"
-
-	"github.com/davidlazar/go-crypto/pwclip"
-	"github.com/davidlazar/go-libyaml/yaml"
-	"golang.org/x/crypto/ssh/terminal"
+	"github.com/davidlazar/go-crypto/drbg"
+	"golang.org/x/crypto/scrypt"
 )
 
-func promptPassphrase() ([]byte, error) {
-	fmt.Fprint(os.Stderr, "Passphrase: ")
-	passphrase, err := terminal.ReadPassword(syscall.Stdin)
-	fmt.Fprintln(os.Stderr)
-	if err != nil {
-		return nil, fmt.Errorf("terminal.ReadPassword: %s", err)
-	}
-	key, err := pwclip.Key(passphrase)
-	if err != nil {
-		return nil, fmt.Errorf("key derivation failed: %s", err)
-	}
-	return key, nil
+// Password Metadata
+type PWM struct {
+	URL      string
+	Username string
+	Extra    *string // Optional
+	Prefix   string
+	Charset  string // 1 <= utf8.RuneCountInString(Charset) <= 256
+	Length   int    // Length in runes (Unicode code points)
 }
 
-func newPWMFromYaml(yamlDoc []byte, question *int) (*pwclip.PWM, error) {
-	pwm := &pwclip.PWM{
-		Charset: pwclip.CharsetAlphaNumeric,
-		Length:  32,
+const CharsetAlphaNumeric = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+
+func (pwm *PWM) Password(key []byte) string {
+	rng := drbg.New(key)
+	rng.Reseed([]byte(pwm.URL))
+	rng.Reseed([]byte(pwm.Username))
+	if pwm.Extra != nil {
+		rng.Reseed([]byte(*pwm.Extra))
 	}
 
-	y, err := yaml.Load(yamlDoc)
-	if err != nil {
-		return nil, err
-	}
+	charset := []rune(pwm.Charset)
+	m := 256 % len(pwm.Charset)
+	pw := []rune(pwm.Prefix)
+	buf := make([]byte, 256)
 
-	m, ok := y.(map[string]interface{})
-	if !ok {
-		return nil, fmt.Errorf("unexpected yaml structure")
-	}
-
-	if v, ok := m["url"]; ok {
-		if s, ok := v.(string); ok {
-			pwm.URL = s
-		} else {
-			return nil, fmt.Errorf("url must be a string")
-		}
-	}
-	if v, ok := m["username"]; ok {
-		if s, ok := v.(string); ok {
-			pwm.Username = s
-		} else {
-			return nil, fmt.Errorf("username must be a string")
-		}
-	}
-	if v, ok := m["prefix"]; ok {
-		if s, ok := v.(string); ok {
-			pwm.Prefix = s
-		} else {
-			return nil, fmt.Errorf("prefix must be a string")
-		}
-	}
-	if v, ok := m["charset"]; ok {
-		if s, ok := v.(string); ok {
-			pwm.Charset = s
-		} else {
-			return nil, fmt.Errorf("charset must be a string")
-		}
-	}
-	if v, ok := m["length"]; ok {
-		if s, ok := v.(string); ok {
-			i, err := strconv.Atoi(s)
-			if err != nil {
-				return nil, fmt.Errorf("length must be an int")
+	for len(pw) < pwm.Length {
+		rng.Read(buf)
+		for i := 0; i < len(buf) && len(pw) < pwm.Length; i++ {
+			r := int(buf[i])
+			// ensure uniform distribution mod len(charset)
+			if r < 256-m {
+				pw = append(pw, charset[r%len(charset)])
 			}
-			pwm.Length = i
-		} else {
-			return nil, fmt.Errorf("length must be an int")
 		}
 	}
-	if question != nil {
-		q := "q" + strconv.Itoa(*question)
-		v, ok := m[q]
-		if !ok {
-			return nil, fmt.Errorf("question %q not in settings", q)
-		}
-		if s, ok := v.(string); ok {
-			pwm.Extra = &s
-		} else {
-			return nil, fmt.Errorf("q%d must be a string", *question)
-		}
-	}
-	return pwm, nil
+
+	return string(pw[:pwm.Length])
+}
+
+func Key(passphrase []byte) ([]byte, error) {
+	return scrypt.Key(passphrase, []byte("pwclip"), 2<<15, 8, 1, 32)
 }

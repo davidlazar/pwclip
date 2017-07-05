@@ -9,6 +9,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/davidlazar/clipboard"
 )
 
 var (
@@ -69,7 +71,7 @@ func main() {
 		fmt.Println(pw)
 	} else {
 		fmt.Fprintf(os.Stderr, "Password copied to clipboard for 10 seconds.\n")
-		check(setClipboardTemporarily([]byte(pw), 10*time.Second), "clipboard")
+		check(clipboard.SetClipboardTemporarily([]byte(pw), 10*time.Second), "clipboard")
 	}
 }
 

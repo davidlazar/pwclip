@@ -70,8 +70,11 @@ func main() {
 	if printPass {
 		fmt.Println(pw)
 	} else {
+		done, err := clipboard.SetClipboardTemporarily([]byte(pw), 10*time.Second)
+		check(err, "setting clipboard")
 		fmt.Fprintf(os.Stderr, "Password copied to clipboard for 10 seconds.\n")
-		check(clipboard.SetClipboardTemporarily([]byte(pw), 10*time.Second), "clipboard")
+		err = <-done
+		check(err, "resetting clipboard")
 	}
 }
 
